@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+    <name>Radios</name>
+    <key>radios</key>
+    <state>stable</state>
+    <logo>pics/radio.png</logo>
+    <description>
+        <short>
+            <en>Simple Hello World Plugin</en>
+            <pt_BR>Plugin simples Olá Mundo</pt_BR>
+        </short>
+        <long>
+            <en>A simple plugin that adds a "Radio" menu item showing Hello World</en>
+            <pt_BR>Um plugin simples que adiciona um item de menu "radio" mostrando Olá Mundo</pt_BR>
+        </long>
+    </description>
+    <homepage>https://github.com/seuusuario/glpi-radio</homepage>
+    <download>https://github.com/seuusuario/glpi-radio/releases</download>
+    <issues>https://github.com/seuusuario/glpi-radio/issues</issues>
+    <readme>https://github.com/seuusuario/glpi-radio/blob/main/README.md</readme>
+    <authors>
+        <author>Diego, Luciano, Rafael e Tulio</author>
+    </authors>
+    <versions>
+        <version>
+            <num>1.0.0</num>
+            <compatibility>10.0.0</compatibility>
+        </version>
+    </versions>
+    <langs>
+        <lang>pt_BR</lang>
+        <lang>en_US</lang>
+    </langs>
+    <license>GPL v2+</license>
+    <tags>
+        <pt_BR>
+            <tag>exemplo</tag>
+            <tag>hello world</tag>
+        </pt_BR>
+        <en>
+            <tag>example</tag>
+            <tag>hello world</tag>
+        </en>
+    </tags>
+</root>
