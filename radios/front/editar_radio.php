@@ -23,7 +23,7 @@ if ($radio_id <= 0) {
 
 // Buscar dados do rádio
 try {
-    $sql = "SELECT * FROM glpi_radios WHERE id = $radio_id AND is_deleted = 0";
+    $sql = "SELECT * FROM glpi_plugin_radios_radios WHERE id = $radio_id AND is_deleted = 0";
     $result = $DB->query($sql);
     
     if (!$result || $DB->numrows($result) == 0) {
@@ -209,7 +209,7 @@ if (isset($_POST['update_radio'])) {
         } else {
             // Verificar duplicidade de série (excluindo o próprio registro)
             try {
-                $check_sql = "SELECT COUNT(*) as total FROM glpi_radios WHERE serial = '" . $DB->escape($form_data['serial']) . "' AND is_deleted = 0 AND id != $radio_id";
+                $check_sql = "SELECT COUNT(*) as total FROM glpi_plugin_radios_radios WHERE serial = '" . $DB->escape($form_data['serial']) . "' AND is_deleted = 0 AND id != $radio_id";
                 $check_result = $DB->query($check_sql);
                 $check_data = $DB->fetchAssoc($check_result);
                 
@@ -236,7 +236,7 @@ if (isset($_POST['update_radio'])) {
                 $chave_nf_esc = $DB->escape($form_data['chave_nf']);
                 $comment_esc = $DB->escape($form_data['comment']);
                 
-                $sql = "UPDATE `glpi_radios` SET 
+                $sql = "UPDATE `glpi_plugin_radios_radios` SET 
                         `manufacturers_id` = " . $form_data['manufacturers_id'] . ",
                         `model` = '$model_esc',
                         `serial` = '$serial_esc',

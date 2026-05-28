@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 class PluginRadiosRadio extends CommonDBTM {
 
@@ -25,7 +25,7 @@ class PluginRadiosRadio extends CommonDBTM {
     }
 
     static function getTable($classname = null) {
-        return 'glpi_radios';
+        return 'glpi_plugin_radios_radios';
     }
 
     static function getNameField() {

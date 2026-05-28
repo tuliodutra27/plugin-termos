@@ -1,10 +1,10 @@
-<?php
+﻿<?php
 
 function plugin_radios_install() {
     global $DB;
 
-    // Criação da tabela principal glpi_radios
-    $table_radios = 'glpi_radios';
+    // Criação da tabela principal glpi_plugin_radios_radios
+    $table_radios = 'glpi_plugin_radios_radios';
     $query_radios = "CREATE TABLE IF NOT EXISTS `$table_radios` (
         `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
         `name` VARCHAR(255) DEFAULT NULL,
@@ -34,7 +34,7 @@ function plugin_radios_install() {
         KEY `idx_chave_nf` (`chave_nf`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
 
-    if (!$DB->queryOrDie($query_radios, "Erro ao criar tabela glpi_radios")) {
+    if (!$DB->queryOrDie($query_radios, "Erro ao criar tabela glpi_plugin_radios_radios")) {
         return false;
     }
 
@@ -60,7 +60,7 @@ function plugin_radios_install() {
         KEY `idx_tecnico` (`tecnico_alterou_id`),
         KEY `idx_serial` (`serial`),
         KEY `idx_patrimonio` (`patrimonio`),
-        CONSTRAINT `fk_radios_historico_radios` FOREIGN KEY (`radios_id`) REFERENCES `glpi_radios` (`id`) ON DELETE CASCADE
+        CONSTRAINT `fk_radios_historico_radios` FOREIGN KEY (`radios_id`) REFERENCES `glpi_plugin_radios_radios` (`id`) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
     
     if (!$DB->queryOrDie($query_historico, "Erro ao criar tabela glpi_radios_historico")) {
@@ -122,7 +122,7 @@ function plugin_radios_uninstall() {
     }
     
     // Por último remove a tabela principal
-    if (!$DB->queryOrDie("DROP TABLE IF EXISTS `glpi_radios`", "Erro ao remover tabela glpi_radios")) {
+    if (!$DB->queryOrDie("DROP TABLE IF EXISTS `glpi_plugin_radios_radios`", "Erro ao remover tabela glpi_plugin_radios_radios")) {
         return false;
     }
     

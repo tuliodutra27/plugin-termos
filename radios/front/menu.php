@@ -66,7 +66,7 @@ if (isset($_GET['export_csv'])) {
                        u.realname AS user_realname,
                        u.firstname AS user_firstname,
                        l.name AS location_name
-                FROM glpi_radios r
+                FROM glpi_plugin_radios_radios r
                 LEFT JOIN glpi_manufacturers m ON r.manufacturers_id = m.id
                 LEFT JOIN glpi_states s ON r.states_id = s.id
                 LEFT JOIN glpi_groups g ON r.groups_id = g.id
@@ -166,7 +166,7 @@ if (isset($_POST['delete_id']) && isset($_POST['confirm_delete'])) {
     if ($delete_id > 0) {
         try {
             // Soft delete - marcar como deletado
-            $sql = "UPDATE glpi_radios SET is_deleted = 1, date_mod = NOW() WHERE id = $delete_id";
+            $sql = "UPDATE glpi_plugin_radios_radios SET is_deleted = 1, date_mod = NOW() WHERE id = $delete_id";
             $result = $DB->query($sql);
             
             if ($result) {
@@ -216,10 +216,10 @@ if (isset($_POST['bulk_edit'])) {
 
     $updated = 0;
     foreach ($ids as $radio_id) {
-        $before = $DB->fetchAssoc($DB->query("SELECT * FROM glpi_radios WHERE id = $radio_id AND is_deleted = 0"));
+        $before = $DB->fetchAssoc($DB->query("SELECT * FROM glpi_plugin_radios_radios WHERE id = $radio_id AND is_deleted = 0"));
         if (!$before) continue;
 
-        if ($DB->query("UPDATE `glpi_radios` SET $set_sql WHERE `id` = $radio_id")) {
+        if ($DB->query("UPDATE `glpi_plugin_radios_radios` SET $set_sql WHERE `id` = $radio_id")) {
             $after = array_merge($before, $updates);
             $DB->query("INSERT INTO `glpi_radios_historico`
                 (`radios_id`, `serial`, `model`, `manufacturers_id`, `patrimonio`,
@@ -459,7 +459,7 @@ try {
     
     // Query para contar total de registros
     $count_sql = "SELECT COUNT(*) as total 
-                  FROM glpi_radios r 
+                  FROM glpi_plugin_radios_radios r 
                   LEFT JOIN glpi_manufacturers m ON r.manufacturers_id = m.id
                   LEFT JOIN glpi_states s ON r.states_id = s.id
                   LEFT JOIN glpi_groups g ON r.groups_id = g.id
@@ -481,7 +481,7 @@ try {
                    u.realname AS user_realname,
                    u.firstname AS user_firstname,
                    l.name AS location_name
-            FROM glpi_radios r
+            FROM glpi_plugin_radios_radios r
             LEFT JOIN glpi_manufacturers m ON r.manufacturers_id = m.id
             LEFT JOIN glpi_states s ON r.states_id = s.id
             LEFT JOIN glpi_groups g ON r.groups_id = g.id
@@ -724,11 +724,11 @@ try {
     } else {
         // Debug: verificar se a tabela existe e tem dados
         try {
-            $check_table = $DB->query("SHOW TABLES LIKE 'glpi_radios'");
+            $check_table = $DB->query("SHOW TABLES LIKE 'glpi_plugin_radios_radios'");
             if ($DB->numrows($check_table) == 0) {
-                echo "<p style='text-align: center; color: red;'>❌ Tabela 'glpi_radios' não existe. Verifique se o hook de instalação foi executado.</p>";
+                echo "<p style='text-align: center; color: red;'>❌ Tabela 'glpi_plugin_radios_radios' não existe. Verifique se o hook de instalação foi executado.</p>";
             } else {
-                $count_query = $DB->query("SELECT COUNT(*) as total FROM glpi_radios WHERE is_deleted = 0");
+                $count_query = $DB->query("SELECT COUNT(*) as total FROM glpi_plugin_radios_radios WHERE is_deleted = 0");
                 $count_result = $DB->fetchAssoc($count_query);
                 $total_radios = $count_result['total'];
                 
