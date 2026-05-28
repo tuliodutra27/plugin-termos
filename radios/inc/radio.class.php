@@ -35,20 +35,12 @@ class PluginRadiosRadio extends CommonDBTM {
     static function getMenuContent() {
         $menu = [
             'title' => self::getTypeName(2),
-            'page'  => '/plugins/radios/front/radio.php',
+            'page'  => self::getSearchURL(false),
             'icon'  => 'fa-solid fa-walkie-talkie',
-        ];
-
-        $menu['options']['list'] = [
-            'title' => self::getTypeName(2),
-            'page'  => '/plugins/radios/front/radio.php',
-            'icon'  => 'ti ti-list',
-        ];
-
-        $menu['options']['novo'] = [
-            'title' => __('Adicionar', 'radios'),
-            'page'  => '/plugins/radios/front/radio.form.php',
-            'icon'  => 'ti ti-plus',
+            'links' => [
+                'search' => self::getSearchURL(false),
+                'add'    => self::getFormURL(false),
+            ],
         ];
 
         $menu['options']['historico'] = [
