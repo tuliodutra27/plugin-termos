@@ -43,41 +43,6 @@ try {
 $form_data = $radio;
 $has_errors = false;
 
-// Função para buscar dados de pré-atualização
-function buscarDadosPreUpdate($DB, $radio_id) {
-    try {
-        // Buscar o registro mais recente na tabela de pré-atualização para este rádio
-        $sql = "SELECT * FROM glpi_pre_update_radios 
-                WHERE id = (SELECT MAX(id) FROM glpi_pre_update_radios 
-                           WHERE EXISTS (SELECT 1 FROM glpi_radios WHERE id = $radio_id))
-                LIMIT 1";
-        $result = $DB->query($sql);
-        
-        if ($result && $DB->numrows($result) > 0) {
-            return $DB->fetchAssoc($result);
-        }
-    } catch (Exception $e) {
-        error_log("Erro ao buscar dados de pré-atualização: " . $e->getMessage());
-    }
-    
-    return null;
-}
-
-// Função para limpar tabela de pré-atualização
-function limparTabelaPreUpdate($DB) {
-    try {
-        $sql = "DELETE FROM glpi_pre_update_radios";
-        $result = $DB->query($sql);
-        
-        if ($result) {
-            return true;
-        } else {
-            return false;
-        }
-    } catch (Exception $e) {
-        return false;
-    }
-}
 
 // Função para registrar histórico de alterações
 function registrarHistorico($DB, $radio_id, $dados_antigos, $dados_novos) {
@@ -141,7 +106,7 @@ function registrarHistorico($DB, $radio_id, $dados_antigos, $dados_novos) {
                     " . (int)$dados_novos['locations_id'] . ",
                     " . Session::getLoginUserID() . ",
                     NOW(),
-                    " . $_SESSION['glpiactive_entity'] . "
+                    " . intval($_SESSION['glpiactive_entity']) . "
                 )";
                 
                 $result = $DB->query($insert_sql);
@@ -217,15 +182,10 @@ function obterValorDescritivo($DB, $campo, $valor) {
 if (isset($_POST['update_radio'])) {
     Session::checkRight("config", UPDATE);
     
-    // DEBUG - POST recebido
-    
-    // Validação CSRF simples que funciona
-    if (isset($_POST['_glpi_csrf_token']) && !empty($_POST['_glpi_csrf_token'])) {
-        try {
-            Session::validateCSRF($_POST);
-        } catch (Exception $e) {
-            // Log mas não bloqueia o processamento
-        }
+    if (!isset($_POST['_glpi_csrf_token']) || !Session::validateCSRF($_POST)) {
+        Session::addMessageAfterRedirect('Erro de segurança. Recarregue a página.', true, ERROR);
+        Html::redirect($_SERVER['REQUEST_URI']);
+        exit;
     }
     
     // Coleta e limpa dados - MANTER OS DADOS DO POST
@@ -273,9 +233,6 @@ if (isset($_POST['update_radio'])) {
                 Session::addMessageAfterRedirect($erro, true, ERROR);
             }
         } else {
-            // NOVA FUNCIONALIDADE: Buscar dados de pré-atualização para comparação
-            $dados_pre_update = buscarDadosPreUpdate($DB, $radio_id);
-            
             // Atualizar no banco
             try {
                 $model_esc = $DB->escape($form_data['model']);
@@ -301,25 +258,13 @@ if (isset($_POST['update_radio'])) {
                 $result = $DB->query($sql);
                 
                 if ($result) {
-                    
-                    // NOVA FUNCIONALIDADE: Registrar histórico se houver dados de pré-atualização
-                    if ($dados_pre_update) {
-                        $alteracoes = registrarHistorico($DB, $radio_id, $dados_pre_update, $form_data);
-                        if ($alteracoes > 0) {
-                            Session::addMessageAfterRedirect("Rádio atualizado com sucesso! ($alteracoes alterações registradas)", true, INFO);
-                        } else {
-                            Session::addMessageAfterRedirect("Rádio atualizado com sucesso! (Nenhuma alteração detectada)", true, INFO);
-                        }
+                    $alteracoes = registrarHistorico($DB, $radio_id, $radio, $form_data);
+                    if ($alteracoes > 0) {
+                        Session::addMessageAfterRedirect("Rádio atualizado com sucesso! ($alteracoes alterações registradas)", true, INFO);
                     } else {
-                        Session::addMessageAfterRedirect("Rádio atualizado com sucesso!", true, INFO);
+                        Session::addMessageAfterRedirect("Rádio atualizado com sucesso! (Nenhuma alteração detectada)", true, INFO);
                     }
-                    
-                    // NOVA FUNCIONALIDADE: Limpar tabela de pré-atualização após atualização bem-sucedida
-                    $limpeza_sucesso = limparTabelaPreUpdate($DB);
-                    if ($limpeza_sucesso) {
-                    } else {
-                    }
-                    
+
                     Html::redirect('menu.php');
                     exit;
                 } else {
@@ -398,7 +343,6 @@ try {
     $manufacturers_options[0] = 'Erro ao carregar fabricantes';
 }
 
-// Usar Dropdown::show ao invés de Html::select para melhor compatibilidade com GLPI
 Dropdown::showFromArray('manufacturers_id', $manufacturers_options, [
     'value' => (int)$form_data['manufacturers_id'],
     'used' => [],

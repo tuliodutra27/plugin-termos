@@ -13,7 +13,33 @@ Session::checkRight("config", READ);
 
 global $DB;
 
-// Processar exportação CSV - NOVA FUNCIONALIDADE
+function buildRadioWhereConditions($DB) {
+    $conditions = ["r.is_deleted = 0"];
+    if (!empty($_GET['serial'])) {
+        $conditions[] = "r.serial LIKE '%" . $DB->escape($_GET['serial']) . "%'";
+    }
+    if (!empty($_GET['manufacturer'])) {
+        $conditions[] = "r.manufacturers_id = " . (int)$_GET['manufacturer'];
+    }
+    if (!empty($_GET['model'])) {
+        $conditions[] = "r.model LIKE '%" . $DB->escape($_GET['model']) . "%'";
+    }
+    if (!empty($_GET['state'])) {
+        $conditions[] = "r.states_id = " . (int)$_GET['state'];
+    }
+    if (!empty($_GET['group'])) {
+        $conditions[] = "r.groups_id = " . (int)$_GET['group'];
+    }
+    if (!empty($_GET['user'])) {
+        $conditions[] = "r.users_id = " . (int)$_GET['user'];
+    }
+    if (!empty($_GET['location'])) {
+        $conditions[] = "r.locations_id = " . (int)$_GET['location'];
+    }
+    return $conditions;
+}
+
+// Processar exportação CSV
 if (isset($_GET['export_csv'])) {
     Session::checkRight("config", READ);
     
@@ -25,38 +51,7 @@ if (isset($_GET['export_csv'])) {
     }
     
     try {
-        // Montagem da query SQL com filtros (mesma lógica da listagem)
-        $where_conditions = ["r.is_deleted = 0"];
-        
-        if (!empty($_GET['serial'])) {
-            $serial_esc = $DB->escape($_GET['serial']);
-            $where_conditions[] = "r.serial LIKE '%$serial_esc%'";
-        }
-        if (!empty($_GET['manufacturer'])) {
-            $manufacturer_id = (int)$_GET['manufacturer'];
-            $where_conditions[] = "r.manufacturers_id = $manufacturer_id";
-        }
-        if (!empty($_GET['model'])) {
-            $model_esc = $DB->escape($_GET['model']);
-            $where_conditions[] = "r.model LIKE '%$model_esc%'";
-        }
-        if (!empty($_GET['state'])) {
-            $state_id = (int)$_GET['state'];
-            $where_conditions[] = "r.states_id = $state_id";
-        }
-        if (!empty($_GET['group'])) {
-            $group_id = (int)$_GET['group'];
-            $where_conditions[] = "r.groups_id = $group_id";
-        }
-        if (!empty($_GET['user'])) {
-            $user_id = (int)$_GET['user'];
-            $where_conditions[] = "r.users_id = $user_id";
-        }
-        if (!empty($_GET['location'])) {
-            $location_id = (int)$_GET['location'];
-            $where_conditions[] = "r.locations_id = $location_id";
-        }
-        
+        $where_conditions = buildRadioWhereConditions($DB);
         $where_clause = implode(' AND ', $where_conditions);
         
         // Ordenação para CSV
@@ -160,100 +155,18 @@ if (isset($_GET['export_csv'])) {
     }
 }
 
-// Processar salvamento de pré-atualização - NOVA FUNCIONALIDADE
-if (isset($_GET['pre_edit_id'])) {
-    Session::checkRight("config", UPDATE);
-    
-    // Validar CSRF token
-    if (!Session::validateCSRF($_GET)) {
-        Session::addMessageAfterRedirect('Erro de segurança. Operação não autorizada.', true, ERROR);
-        Html::redirect('menu.php');
-        exit;
-    }
-    
-    $radio_id = (int)$_GET['pre_edit_id'];
-    
-    if ($radio_id > 0) {
-        try {
-            // Buscar os dados atuais do rádio
-            $current_radio_sql = "SELECT * FROM glpi_radios WHERE id = $radio_id AND is_deleted = 0";
-            $current_result = $DB->query($current_radio_sql);
-            
-            if ($current_result && $DB->numrows($current_result) > 0) {
-                $radio_data = $DB->fetchAssoc($current_result);
-                
-                // Inserir dados na tabela de pré-atualização
-                $insert_sql = "INSERT INTO glpi_pre_update_radios (
-                    name, 
-                    manufacturers_id, 
-                    model, 
-                    serial, 
-                    otherserial, 
-                    chave_nf, 
-                    comment, 
-                    states_id, 
-                    users_id, 
-                    groups_id, 
-                    locations_id, 
-                    entities_id, 
-                    date_creation, 
-                    date_mod, 
-                    is_deleted, 
-                    is_template, 
-                    template_name
-                ) VALUES (
-                    '" . $DB->escape($radio_data['name']) . "',
-                    " . (int)$radio_data['manufacturers_id'] . ",
-                    '" . $DB->escape($radio_data['model']) . "',
-                    '" . $DB->escape($radio_data['serial']) . "',
-                    '" . $DB->escape($radio_data['otherserial']) . "',
-                    '" . $DB->escape($radio_data['chave_nf']) . "',
-                    '" . $DB->escape($radio_data['comment']) . "',
-                    " . (int)$radio_data['states_id'] . ",
-                    " . (int)$radio_data['users_id'] . ",
-                    " . (int)$radio_data['groups_id'] . ",
-                    " . (int)$radio_data['locations_id'] . ",
-                    " . (int)$radio_data['entities_id'] . ",
-                    '" . $radio_data['date_creation'] . "',
-                    '" . $radio_data['date_mod'] . "',
-                    " . (int)$radio_data['is_deleted'] . ",
-                    " . (int)$radio_data['is_template'] . ",
-                    '" . $DB->escape($radio_data['template_name']) . "'
-                )";
-                
-                $insert_result = $DB->query($insert_sql);
-                
-                if ($insert_result) {
-                    // Redirecionar para a tela de edição
-                    Html::redirect('editar_radio.php?id=' . $radio_id);
-                    exit;
-                } else {
-                    Session::addMessageAfterRedirect('Erro ao salvar dados de pré-atualização', true, ERROR);
-                }
-            } else {
-                Session::addMessageAfterRedirect('Rádio não encontrado', true, ERROR);
-            }
-        } catch (Exception $e) {
-            Session::addMessageAfterRedirect('Erro inesperado ao salvar pré-atualização: ' . $e->getMessage(), true, ERROR);
-        }
-    }
-    
-    Html::redirect('menu.php');
-    exit;
-}
 
-// Processar exclusão de rádio - CORREÇÃO AQUI
-if (isset($_GET['delete_id']) && isset($_GET['confirm_delete'])) {
+// Processar exclusão de rádio
+if (isset($_POST['delete_id']) && isset($_POST['confirm_delete'])) {
     Session::checkRight("config", UPDATE);
-    
-    // Validar CSRF token para operações de exclusão
-    if (!Session::validateCSRF($_GET)) {
+
+    if (!isset($_POST['_glpi_csrf_token']) || !Session::validateCSRF($_POST)) {
         Session::addMessageAfterRedirect('Erro de segurança. Operação não autorizada.', true, ERROR);
         Html::redirect('menu.php');
         exit;
     }
-    
-    $delete_id = (int)$_GET['delete_id'];
+
+    $delete_id = (int)$_POST['delete_id'];
     
     if ($delete_id > 0) {
         try {
@@ -315,7 +228,7 @@ try {
     ]);
     foreach ($manufacturers as $manufacturer) {
         $selected = (isset($_GET['manufacturer']) && $_GET['manufacturer'] == $manufacturer['id']) ? 'selected' : '';
-        echo "<option value='".$manufacturer['id']."' $selected>".$manufacturer['name']."</option>";
+        echo "<option value='".intval($manufacturer['id'])."' $selected>".htmlspecialchars($manufacturer['name'])."</option>";
     }
 } catch (Exception $e) {
     echo "<option value=''>Erro ao carregar</option>";
@@ -343,7 +256,7 @@ try {
     ]);
     foreach ($states as $state) {
         $selected = (isset($_GET['state']) && $_GET['state'] == $state['id']) ? 'selected' : '';
-        echo "<option value='".$state['id']."' $selected>".$state['name']."</option>";
+        echo "<option value='".intval($state['id'])."' $selected>".htmlspecialchars($state['name'])."</option>";
     }
 } catch (Exception $e) {
     echo "<option value=''>Erro ao carregar</option>";
@@ -377,7 +290,7 @@ try {
     foreach ($groups as $group) {
         $selected = (isset($_GET['group']) && $_GET['group'] == $group['id']) ? 'selected' : '';
         $group_name = !empty($group['completename']) ? $group['completename'] : $group['name'];
-        echo "<option value='".$group['id']."' $selected>$group_name</option>";
+        echo "<option value='".intval($group['id'])."' $selected>".htmlspecialchars($group_name)."</option>";
     }
 } catch (Exception $e) {
     echo "<option value=''>Erro ao carregar</option>";
@@ -401,7 +314,7 @@ try {
     foreach ($users as $user) {
         $selected = (isset($_GET['user']) && $_GET['user'] == $user['id']) ? 'selected' : '';
         $name = trim($user['realname'] . ' ' . $user['firstname']);
-        echo "<option value='".$user['id']."' $selected>$name</option>";
+        echo "<option value='".intval($user['id'])."' $selected>".htmlspecialchars($name)."</option>";
     }
 } catch (Exception $e) {
     echo "<option value=''>Erro ao carregar</option>";
@@ -423,7 +336,7 @@ try {
     ]);
     foreach ($locations as $location) {
         $selected = (isset($_GET['location']) && $_GET['location'] == $location['id']) ? 'selected' : '';
-        echo "<option value='".$location['id']."' $selected>".$location['name']."</option>";
+        echo "<option value='".intval($location['id'])."' $selected>".htmlspecialchars($location['name'])."</option>";
     }
 } catch (Exception $e) {
     echo "<option value=''>Erro ao carregar</option>";
@@ -478,38 +391,7 @@ try {
     $page = (int)($_GET['page'] ?? 1);
     $offset = ($page - 1) * $per_page;
     
-    // Montagem da query SQL com filtros
-    $where_conditions = ["r.is_deleted = 0"];
-    
-    if (!empty($_GET['serial'])) {
-        $serial_esc = $DB->escape($_GET['serial']);
-        $where_conditions[] = "r.serial LIKE '%$serial_esc%'";
-    }
-    if (!empty($_GET['manufacturer'])) {
-        $manufacturer_id = (int)$_GET['manufacturer'];
-        $where_conditions[] = "r.manufacturers_id = $manufacturer_id";
-    }
-    if (!empty($_GET['model'])) {
-        $model_esc = $DB->escape($_GET['model']);
-        $where_conditions[] = "r.model LIKE '%$model_esc%'";
-    }
-    if (!empty($_GET['state'])) {
-        $state_id = (int)$_GET['state'];
-        $where_conditions[] = "r.states_id = $state_id";
-    }
-    if (!empty($_GET['group'])) {
-        $group_id = (int)$_GET['group'];
-        $where_conditions[] = "r.groups_id = $group_id";
-    }
-    if (!empty($_GET['user'])) {
-        $user_id = (int)$_GET['user'];
-        $where_conditions[] = "r.users_id = $user_id";
-    }
-    if (!empty($_GET['location'])) {
-        $location_id = (int)$_GET['location'];
-        $where_conditions[] = "r.locations_id = $location_id";
-    }
-    
+    $where_conditions = buildRadioWhereConditions($DB);
     $where_clause = implode(' AND ', $where_conditions);
     
     // NOVA FUNCIONALIDADE: Ordenação
@@ -561,6 +443,7 @@ try {
     }
 
     if (count($radios) > 0) {
+        $delete_csrf_token = Session::getNewCSRFToken();
         echo "<table class='tab_cadre_fixe' style='width: 100%;'>";
         echo "<tr class='tab_bg_2'>";
         echo "<th>ID</th>";
@@ -600,13 +483,15 @@ try {
             echo "<td>".Html::entities_deep(trim(($radio['user_realname'] ?: '') . ' ' . ($radio['user_firstname'] ?: '')))."</td>";
             echo "<td>".Html::entities_deep($radio['location_name'] ?: '-')."</td>";
             
-            // Botões de ação - MODIFICAÇÃO: Link de editar agora chama pre-edit
             echo "<td style='text-align: center;'>";
-            $csrf_token = Session::getNewCSRFToken();
-            echo "<a href='?pre_edit_id=".$radio['id']."&_glpi_csrf_token=$csrf_token' title='Editar' style='margin-right: 5px; color: #007bff; text-decoration: none;'>✏️ Editar</a>";
+            echo "<a href='editar_radio.php?id=".intval($radio['id'])."' title='Editar' style='margin-right: 5px; color: #007bff; text-decoration: none;'>✏️ Editar</a>";
             echo " | ";
-            // Link de exclusão mantém o mesmo
-            echo "<a href='?delete_id=".$radio['id']."&confirm_delete=1&_glpi_csrf_token=$csrf_token' title='Excluir' onclick='return confirm(\"Tem certeza que deseja excluir este rádio?\")' style='color: #dc3545; text-decoration: none;'>🗑️ Excluir</a>";
+            echo "<form method='POST' action='' style='display:inline;'>";
+            echo "<input type='hidden' name='delete_id' value='".intval($radio['id'])."'>";
+            echo "<input type='hidden' name='confirm_delete' value='1'>";
+            echo "<input type='hidden' name='_glpi_csrf_token' value='".htmlspecialchars($delete_csrf_token)."'>";
+            echo "<button type='submit' onclick='return confirm(\"Tem certeza que deseja excluir este rádio?\")' style='background:none;border:none;color:#dc3545;cursor:pointer;font-size:inherit;padding:0;'>🗑️ Excluir</button>";
+            echo "</form>";
             echo "</td>";
             
             echo "</tr>";
