@@ -41,6 +41,6 @@ if (isset($_POST['add'])) {
 $ID = intval($_GET['id'] ?? -1);
 $radio->check($ID, READ);
 
-Html::header(PluginRadiosRadio::getTypeName(1), $_SERVER['PHP_SELF'], 'plugins', 'radios');
+Html::header(PluginRadiosRadio::getTypeName(1), $_SERVER['PHP_SELF'], 'assets', 'PluginRadiosRadio');
 $radio->display(['id' => $ID]);
 Html::footer();
