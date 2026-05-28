@@ -394,8 +394,94 @@ try {
             } else {
             }
             
-            // Combinar computadores, monitores, telefones, linhas e rádios em um único array
-            $all_equipment = array_merge($computers, $monitors, $phones, $lines, $radios);
+            // BUSCAR IMPRESSORAS
+            $sql_printers = "SELECT
+                p.id,
+                p.name,
+                p.serial,
+                p.otherserial,
+                p.comment,
+                pt.name as tipo_equipamento,
+                mf.name as fabricante,
+                pm.name as modelo
+            FROM glpi_printers p
+            LEFT JOIN glpi_printertypes pt ON p.printertypes_id = pt.id
+            LEFT JOIN glpi_manufacturers mf ON p.manufacturers_id = mf.id
+            LEFT JOIN glpi_printermodels pm ON p.printermodels_id = pm.id
+            WHERE p.users_id = " . intval($user_id) . "
+            AND p.is_deleted = 0
+            AND p.entities_id = " . intval($_SESSION['glpiactive_entity']) . "
+            ORDER BY p.name";
+
+            $result_printers = $DB->query($sql_printers);
+            $printers = [];
+
+            if ($result_printers && $DB->numrows($result_printers) > 0) {
+                while ($printer = $DB->fetchAssoc($result_printers)) {
+                    $printer_comment = $printer['comment'] ?? '';
+                    $acessorios = '';
+                    $valor = '';
+
+                    if (preg_match('/\[acessorios\](.*?)\[\/acessorios\]/i', $printer_comment, $matches)) {
+                        $acessorios = trim($matches[1]);
+                    }
+                    if (preg_match('/\[valor\](.*?)\[\/valor\]/i', $printer_comment, $matches)) {
+                        $valor = trim($matches[1]);
+                    }
+
+                    $printer['acessorios'] = $acessorios;
+                    $printer['valor'] = $valor;
+                    $printer['tipo'] = 'Impressora';
+
+                    $printers[] = $printer;
+                }
+            }
+
+            // BUSCAR PERIFÉRICOS
+            $sql_peripherals = "SELECT
+                p.id,
+                p.name,
+                p.serial,
+                p.otherserial,
+                p.comment,
+                pt.name as tipo_equipamento,
+                mf.name as fabricante,
+                pm.name as modelo
+            FROM glpi_peripherals p
+            LEFT JOIN glpi_peripheraltypes pt ON p.peripheraltypes_id = pt.id
+            LEFT JOIN glpi_manufacturers mf ON p.manufacturers_id = mf.id
+            LEFT JOIN glpi_peripheralmodels pm ON p.peripheralmodels_id = pm.id
+            WHERE p.users_id = " . intval($user_id) . "
+            AND p.is_deleted = 0
+            AND p.entities_id = " . intval($_SESSION['glpiactive_entity']) . "
+            ORDER BY p.name";
+
+            $result_peripherals = $DB->query($sql_peripherals);
+            $peripherals = [];
+
+            if ($result_peripherals && $DB->numrows($result_peripherals) > 0) {
+                while ($peripheral = $DB->fetchAssoc($result_peripherals)) {
+                    $peripheral_comment = $peripheral['comment'] ?? '';
+                    $acessorios = '';
+                    $valor = '';
+
+                    if (preg_match('/\[acessorios\](.*?)\[\/acessorios\]/i', $peripheral_comment, $matches)) {
+                        $acessorios = trim($matches[1]);
+                    }
+                    if (preg_match('/\[valor\](.*?)\[\/valor\]/i', $peripheral_comment, $matches)) {
+                        $valor = trim($matches[1]);
+                    }
+
+                    $peripheral['acessorios'] = $acessorios;
+                    $peripheral['valor'] = $valor;
+                    $peripheral['tipo'] = 'Periférico';
+
+                    $peripherals[] = $peripheral;
+                }
+            }
+
+            // Combinar todos os equipamentos em um único array
+            $all_equipment = array_merge($computers, $monitors, $phones, $lines, $radios, $printers, $peripherals);
             
             
             // BUSCAR OBSERVAÇÕES DA TABELA
@@ -838,6 +924,44 @@ try {
                             $descricao_partes[] = $equipment['acessorios'];
                         }
                         
+                    } elseif ($equipment['tipo'] === 'Impressora') {
+                        if (!empty($equipment['tipo_equipamento'])) {
+                            $descricao_partes[] = $equipment['tipo_equipamento'];
+                        } else {
+                            $descricao_partes[] = 'Impressora';
+                        }
+                        if (!empty($equipment['fabricante'])) {
+                            $descricao_partes[] = $equipment['fabricante'];
+                        }
+                        if (!empty($equipment['modelo'])) {
+                            $descricao_partes[] = $equipment['modelo'];
+                        }
+                        if (!empty($equipment['serial'])) {
+                            $descricao_partes[] = $equipment['serial'];
+                        }
+                        if (!empty($equipment['acessorios'])) {
+                            $descricao_partes[] = $equipment['acessorios'];
+                        }
+
+                    } elseif ($equipment['tipo'] === 'Periférico') {
+                        if (!empty($equipment['tipo_equipamento'])) {
+                            $descricao_partes[] = $equipment['tipo_equipamento'];
+                        } else {
+                            $descricao_partes[] = 'Periférico';
+                        }
+                        if (!empty($equipment['fabricante'])) {
+                            $descricao_partes[] = $equipment['fabricante'];
+                        }
+                        if (!empty($equipment['modelo'])) {
+                            $descricao_partes[] = $equipment['modelo'];
+                        }
+                        if (!empty($equipment['serial'])) {
+                            $descricao_partes[] = $equipment['serial'];
+                        }
+                        if (!empty($equipment['acessorios'])) {
+                            $descricao_partes[] = $equipment['acessorios'];
+                        }
+
                     } else {
                         // Para outros equipamentos (monitor, etc) - mantém o padrão original
                         if (!empty($equipment['tipo'])) {
@@ -1208,15 +1332,37 @@ try {
                             $radio_count = $count_data['total'];
                         }
                         
-                        $total_equipment = $computer_count + $monitor_count + $phone_count + $line_count + $radio_count;
-                        $equipment_info = $total_equipment > 0 ? " ({$computer_count} comp., {$monitor_count} mon., {$phone_count} tel., {$line_count} linhas, {$radio_count} rádios)" : " (sem equipamentos)";
+                        $sql_count_printers = "SELECT COUNT(*) as total FROM glpi_printers
+                                              WHERE users_id = " . intval($user['id']) . "
+                                              AND is_deleted = 0
+                                              AND entities_id = " . intval($_SESSION['glpiactive_entity']);
+                        $result_count_printers = $DB->query($sql_count_printers);
+                        $printer_count = 0;
+                        if ($result_count_printers && $DB->numrows($result_count_printers) > 0) {
+                            $count_data = $DB->fetchAssoc($result_count_printers);
+                            $printer_count = $count_data['total'];
+                        }
+
+                        $sql_count_peripherals = "SELECT COUNT(*) as total FROM glpi_peripherals
+                                                 WHERE users_id = " . intval($user['id']) . "
+                                                 AND is_deleted = 0
+                                                 AND entities_id = " . intval($_SESSION['glpiactive_entity']);
+                        $result_count_peripherals = $DB->query($sql_count_peripherals);
+                        $peripheral_count = 0;
+                        if ($result_count_peripherals && $DB->numrows($result_count_peripherals) > 0) {
+                            $count_data = $DB->fetchAssoc($result_count_peripherals);
+                            $peripheral_count = $count_data['total'];
+                        }
+
+                        $total_equipment = $computer_count + $monitor_count + $phone_count + $line_count + $radio_count + $printer_count + $peripheral_count;
+                        $equipment_info = $total_equipment > 0 ? " ({$computer_count} comp., {$monitor_count} mon., {$phone_count} tel., {$line_count} linhas, {$radio_count} rádios, {$printer_count} impr., {$peripheral_count} perif.)" : " (sem equipamentos)";
                         
                         echo "<option value='" . $user['id'] . "'>" . htmlspecialchars($nome_completo . $cargo_info . $cpf_info . $equipment_info) . "</option>";
                     }
                 }
                 
                 echo "</select>";
-                echo "<br><small style='color: #6c757d;'>Selecione o usuário que receberá o equipamento/material (CPF, Cargo, Computadores, Monitores, Telefones, Linhas e Rádios serão incluídos automaticamente)</small>";
+                echo "<br><small style='color: #6c757d;'>Selecione o usuário que receberá o equipamento/material (CPF, Cargo, Computadores, Monitores, Telefones, Linhas, Rádios, Impressoras e Periféricos serão incluídos automaticamente)</small>";
                 echo "</td>";
                 echo "</tr>";
 
