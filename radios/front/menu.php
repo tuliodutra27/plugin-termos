@@ -183,6 +183,71 @@ if (isset($_POST['delete_id']) && isset($_POST['confirm_delete'])) {
     exit;
 }
 
+// Processar edição em massa
+if (isset($_POST['bulk_edit'])) {
+    Session::checkRight("config", UPDATE);
+
+    $ids = array_values(array_filter(array_map('intval', (array)($_POST['selected_ids'] ?? []))));
+
+    if (empty($ids)) {
+        Session::addMessageAfterRedirect('Nenhum rádio selecionado.', true, WARNING);
+        Html::redirect('menu.php');
+        exit;
+    }
+
+    $updates = [];
+    if (!empty($_POST['bulk_states_id']))    $updates['states_id']    = intval($_POST['bulk_states_id']);
+    if (!empty($_POST['bulk_groups_id']))    $updates['groups_id']    = intval($_POST['bulk_groups_id']);
+    if (!empty($_POST['bulk_users_id']))     $updates['users_id']     = intval($_POST['bulk_users_id']);
+    if (!empty($_POST['bulk_locations_id'])) $updates['locations_id'] = intval($_POST['bulk_locations_id']);
+
+    if (empty($updates)) {
+        Session::addMessageAfterRedirect('Selecione ao menos um campo para atualizar.', true, WARNING);
+        Html::redirect('menu.php');
+        exit;
+    }
+
+    $set_parts = [];
+    foreach ($updates as $field => $value) {
+        $set_parts[] = "`$field` = $value";
+    }
+    $set_parts[] = '`date_mod` = NOW()';
+    $set_sql = implode(', ', $set_parts);
+
+    $updated = 0;
+    foreach ($ids as $radio_id) {
+        $before = $DB->fetchAssoc($DB->query("SELECT * FROM glpi_radios WHERE id = $radio_id AND is_deleted = 0"));
+        if (!$before) continue;
+
+        if ($DB->query("UPDATE `glpi_radios` SET $set_sql WHERE `id` = $radio_id")) {
+            $after = array_merge($before, $updates);
+            $DB->query("INSERT INTO `glpi_radios_historico`
+                (`radios_id`, `serial`, `model`, `manufacturers_id`, `patrimonio`,
+                 `states_id`, `groups_id`, `users_id`, `locations_id`,
+                 `tecnico_alterou_id`, `data_movimentacao`, `entities_id`)
+                VALUES (
+                    $radio_id,
+                    '" . $DB->escape($after['serial']) . "',
+                    '" . $DB->escape($after['model']) . "',
+                    " . intval($after['manufacturers_id']) . ",
+                    '" . $DB->escape($after['otherserial']) . "',
+                    " . intval($after['states_id']) . ",
+                    " . intval($after['groups_id']) . ",
+                    " . intval($after['users_id']) . ",
+                    " . intval($after['locations_id']) . ",
+                    " . Session::getLoginUserID() . ",
+                    NOW(),
+                    " . intval($_SESSION['glpiactive_entity']) . "
+                )");
+            $updated++;
+        }
+    }
+
+    Session::addMessageAfterRedirect("$updated rádio(s) atualizado(s) com sucesso!", true, INFO);
+    Html::redirect('menu.php');
+    exit;
+}
+
 Html::header(__('Sistema de Controle de Rádios', 'radios'), $_SERVER['PHP_SELF'], 'plugins', 'radios');
 
 echo "<div class='center'>";
@@ -438,9 +503,15 @@ try {
     }
 
     if (count($radios) > 0) {
+        $bulk_csrf_token  = Session::getNewCSRFToken();
         $delete_csrf_token = Session::getNewCSRFToken();
+
+        echo "<form id='bulk-form' method='POST' action=''>";
+        echo "<input type='hidden' name='_glpi_csrf_token' value='".htmlspecialchars($bulk_csrf_token)."'>";
+
         echo "<table class='tab_cadre_fixe' style='width: 100%;'>";
         echo "<tr class='tab_bg_2'>";
+        echo "<th style='width:40px;'><input type='checkbox' id='select-all' title='Selecionar todos'></th>";
         echo "<th>ID</th>";
         echo "<th>Fabricante</th>";
         echo "<th>Modelo</th>";
@@ -457,6 +528,7 @@ try {
         foreach ($radios as $radio) {
             $class = ($i % 2 == 0) ? 'tab_bg_1' : 'tab_bg_3';
             echo "<tr class='$class'>";
+            echo "<td style='text-align:center;'><input type='checkbox' name='selected_ids[]' value='".intval($radio['id'])."' class='radio-cb'></td>";
             echo "<td>".Html::entities_deep($radio['id'])."</td>";
             echo "<td>".Html::entities_deep($radio['manufacturer_name'] ?: '-')."</td>";
             echo "<td>".Html::entities_deep($radio['model'] ?: '-')."</td>";
@@ -478,22 +550,97 @@ try {
             echo "<td>".Html::entities_deep(trim(($radio['user_firstname'] ?: '') . ' ' . ($radio['user_realname'] ?: '')))."</td>";
             echo "<td>".Html::entities_deep($radio['location_name'] ?: '-')."</td>";
             
-            echo "<td style='text-align: center;'>";
-            echo "<a href='editar_radio.php?id=".intval($radio['id'])."' title='Editar' style='margin-right: 5px; color: #007bff; text-decoration: none;'>✏️ Editar</a>";
+            echo "<td style='text-align: center; white-space:nowrap;'>";
+            echo "<a href='editar_radio.php?id=".intval($radio['id'])."' style='color:#007bff;text-decoration:none;margin-right:5px;'>✏️ Editar</a>";
             echo " | ";
-            echo "<form method='POST' action='' style='display:inline;'>";
-            echo "<input type='hidden' name='delete_id' value='".intval($radio['id'])."'>";
-            echo "<input type='hidden' name='confirm_delete' value='1'>";
-            echo "<input type='hidden' name='_glpi_csrf_token' value='".htmlspecialchars($delete_csrf_token)."'>";
-            echo "<button type='submit' onclick='return confirm(\"Tem certeza que deseja excluir este rádio?\")' style='background:none;border:none;color:#dc3545;cursor:pointer;font-size:inherit;padding:0;'>🗑️ Excluir</button>";
-            echo "</form>";
+            echo "<a href='#' onclick='deleteRadio(".intval($radio['id']).")' style='color:#dc3545;text-decoration:none;'>🗑️ Excluir</a>";
             echo "</td>";
             
             echo "</tr>";
             $i++;
         }
         echo "</table>";
-        
+
+        // Painel de edição em massa
+        echo "<div id='bulk-panel' style='background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:20px;margin-top:15px;'>";
+        echo "<h4 style='margin-top:0;'>✏️ Edição em Massa — <span id='bulk-count'>0</span> rádio(s) selecionado(s)</h4>";
+        echo "<div style='display:flex;flex-wrap:wrap;gap:15px;align-items:flex-end;'>";
+
+        // Status
+        $states_bulk = ['' => '— sem alteração —'];
+        $sr = $DB->request(['SELECT' => ['id','name'], 'FROM' => 'glpi_states', 'ORDER' => 'name']);
+        foreach ($sr as $s) $states_bulk[$s['id']] = $s['name'];
+        echo "<div><label><strong>Status:</strong></label><br>";
+        echo "<select name='bulk_states_id' style='padding:5px;'>";
+        foreach ($states_bulk as $v => $l) echo "<option value='".htmlspecialchars($v)."'>".htmlspecialchars($l)."</option>";
+        echo "</select></div>";
+
+        // Grupo
+        $groups_bulk = ['' => '— sem alteração —'];
+        $entity_cond = ['OR' => ['entities_id' => intval($_SESSION['glpiactive_entity']), 'is_recursive' => 1]];
+        $gr = $DB->request(['SELECT' => ['id','completename','name'], 'FROM' => 'glpi_groups', 'WHERE' => $entity_cond, 'ORDER' => 'completename']);
+        foreach ($gr as $g) $groups_bulk[$g['id']] = $g['completename'] ?: $g['name'];
+        echo "<div><label><strong>Grupo:</strong></label><br>";
+        echo "<select name='bulk_groups_id' style='padding:5px;'>";
+        foreach ($groups_bulk as $v => $l) echo "<option value='".htmlspecialchars($v)."'>".htmlspecialchars($l)."</option>";
+        echo "</select></div>";
+
+        // Usuário
+        $users_bulk = ['' => '— sem alteração —'];
+        $ur = $DB->request(['SELECT' => ['id','firstname','realname'], 'FROM' => 'glpi_users', 'WHERE' => ['is_active' => 1], 'ORDER' => 'firstname']);
+        foreach ($ur as $u) $users_bulk[$u['id']] = trim($u['firstname'] . ' ' . $u['realname']);
+        echo "<div><label><strong>Usuário:</strong></label><br>";
+        echo "<select name='bulk_users_id' style='padding:5px;'>";
+        foreach ($users_bulk as $v => $l) echo "<option value='".htmlspecialchars($v)."'>".htmlspecialchars($l)."</option>";
+        echo "</select></div>";
+
+        // Localização
+        $locations_bulk = ['' => '— sem alteração —'];
+        $lr = $DB->request(['SELECT' => ['id','name'], 'FROM' => 'glpi_locations', 'ORDER' => 'name']);
+        foreach ($lr as $l) $locations_bulk[$l['id']] = $l['name'];
+        echo "<div><label><strong>Localização:</strong></label><br>";
+        echo "<select name='bulk_locations_id' style='padding:5px;'>";
+        foreach ($locations_bulk as $v => $lbl) echo "<option value='".htmlspecialchars($v)."'>".htmlspecialchars($lbl)."</option>";
+        echo "</select></div>";
+
+        echo "<div>";
+        echo "<button type='submit' name='bulk_edit' value='1' id='bulk-submit' disabled
+              onclick=\"return confirm('Aplicar alterações a ' + document.getElementById('bulk-count').textContent + ' rádio(s) selecionado(s)?')\"
+              style='padding:8px 20px;background:#ffc107;border:none;border-radius:4px;cursor:pointer;font-weight:bold;'>✔ Aplicar</button>";
+        echo "</div>";
+        echo "</div>";
+        echo "<small style='color:#6c757d;'>Apenas campos preenchidos serão alterados. Campos em branco são ignorados.</small>";
+        echo "</div>";
+
+        echo "</form>"; // fecha o bulk-form
+
+        // Form oculto para exclusão individual
+        echo "<form id='delete-form' method='POST' action=''>";
+        echo "<input type='hidden' name='delete_id' id='delete-form-id' value=''>";
+        echo "<input type='hidden' name='confirm_delete' value='1'>";
+        echo "<input type='hidden' name='_glpi_csrf_token' value='".htmlspecialchars($delete_csrf_token)."'>";
+        echo "</form>";
+
+        echo "<script>
+        document.getElementById('select-all').addEventListener('change', function() {
+            document.querySelectorAll('.radio-cb').forEach(cb => cb.checked = this.checked);
+            updateBulkCount();
+        });
+        document.querySelectorAll('.radio-cb').forEach(cb => cb.addEventListener('change', updateBulkCount));
+        function updateBulkCount() {
+            const n = document.querySelectorAll('.radio-cb:checked').length;
+            document.getElementById('bulk-count').textContent = n;
+            document.getElementById('bulk-submit').disabled = n === 0;
+            document.getElementById('select-all').indeterminate =
+                n > 0 && n < document.querySelectorAll('.radio-cb').length;
+        }
+        function deleteRadio(id) {
+            if (!confirm('Tem certeza que deseja excluir este rádio?')) return;
+            document.getElementById('delete-form-id').value = id;
+            document.getElementById('delete-form').submit();
+        }
+        </script>";
+
         // Navegação de paginação (mostrar apenas se houver mais de uma página)
         if ($total_pages > 1) {
             echo "<div style='text-align: center; margin: 20px 0;'>";
