@@ -21,17 +21,10 @@ try {
     global $DB;
 
     // Processar geração do PDF
-    if (isset($_POST['gerar_pdf'])) {
+    if (isset($_GET['gerar_pdf'])) {
         Session::checkRight("config", READ);
-        
-        // Verificação CSRF
-        if (!isset($_POST['_glpi_csrf_token']) || empty($_POST['_glpi_csrf_token'])) {
-            Session::addMessageAfterRedirect('Erro de segurança. Recarregue a página e tente novamente.', true, ERROR);
-            Html::redirect($_SERVER['REQUEST_URI']);
-            exit;
-        }
-        
-        $user_id = intval($_POST['user_id'] ?? 0);
+
+        $user_id = intval($_GET['user_id'] ?? 0);
         
         if (empty($user_id)) {
             Session::addMessageAfterRedirect('Seleção de usuário é obrigatória para gerar o PDF.', true, ERROR);
@@ -1225,9 +1218,8 @@ try {
                 // Formulário para gerar PDF - MODIFICADO SEM CAMPO VERSÃO/SÉRIE
                 echo "<div class='spaced'>";
                 echo "<h3>Gerar PDF do Termo</h3>";
-                echo "<form method='POST' action=''>";
+                echo "<form method='GET' action=''>";
                 echo Html::hidden('gerar_pdf', ['value' => 1]);
-                echo Html::hidden('_glpi_csrf_token', ['value' => Session::getNewCSRFToken()]);
 
                 echo "<div style='background: #f8f9fa; padding: 30px; border-radius: 8px;'>";
                 echo "<table class='tab_cadre_fixe' style='width: 100%;'>";
