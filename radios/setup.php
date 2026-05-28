@@ -35,5 +35,5 @@ function plugin_init_radios() {
 
     // Define as classes do plugin
     Plugin::registerClass('PluginRadiosMenu');
-    Plugin::registerClass('PluginRadiosRadio', ['addtabon' => ['PluginRadiosRadio']]);
+    Plugin::registerClass('PluginRadiosRadio');
 }
