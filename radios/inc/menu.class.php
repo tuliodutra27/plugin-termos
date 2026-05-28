@@ -12,7 +12,7 @@ class PluginRadiosMenu extends CommonGLPI {
         $menu = [];
         
         $menu['title'] = self::getMenuName();
-        $menu['page'] = '/plugins/radios/front/menu.php'; // ← ALTERADO AQUI
+        $menu['page'] = '/plugins/radios/front/radio.php';
         $menu['icon'] = 'fa-solid fa-walkie-talkie';
         
         return $menu;

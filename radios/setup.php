@@ -27,12 +27,13 @@ function plugin_radios_check_config() {
 
 function plugin_init_radios() {
     global $PLUGIN_HOOKS;
-    
+
     $PLUGIN_HOOKS['csrf_compliant']['radios'] = true;
-    
+
     // Adiciona item ao menu Ativos
-    $PLUGIN_HOOKS['menu_toadd']['radios'] = ['assets' => 'PluginRadiosMenu'];
-    
+    $PLUGIN_HOOKS['menu_toadd']['radios'] = ['assets' => 'PluginRadiosRadio'];
+
     // Define as classes do plugin
     Plugin::registerClass('PluginRadiosMenu');
+    Plugin::registerClass('PluginRadiosRadio');
 }
