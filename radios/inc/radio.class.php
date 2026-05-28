@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 class PluginRadiosRadio extends CommonDBTM {
 
@@ -47,7 +47,7 @@ class PluginRadiosRadio extends CommonDBTM {
 
         $menu['options']['novo'] = [
             'title' => __('Adicionar', 'radios'),
-            'page'  => '/plugins/radios/front/novo_radio.php',
+            'page'  => '/plugins/radios/front/radio.form.php',
             'icon'  => 'ti ti-plus',
         ];
 
@@ -58,6 +58,129 @@ class PluginRadiosRadio extends CommonDBTM {
         ];
 
         return $menu;
+    }
+
+    function prepareInputForAdd($input) {
+        if (empty($input['serial'])) {
+            Session::addMessageAfterRedirect(__('Número de série é obrigatório.', 'radios'), false, ERROR);
+            return false;
+        }
+        return $input;
+    }
+
+    function prepareInputForUpdate($input) {
+        if (isset($input['serial']) && empty($input['serial'])) {
+            Session::addMessageAfterRedirect(__('Número de série é obrigatório.', 'radios'), false, ERROR);
+            return false;
+        }
+        return $input;
+    }
+
+    function post_addItem() {
+        $this->insertHistoricoEntry();
+    }
+
+    function post_updateItem($history = true) {
+        $this->insertHistoricoEntry();
+    }
+
+    private function insertHistoricoEntry() {
+        global $DB;
+        $DB->query(
+            "INSERT INTO `glpi_radios_historico`
+                (`radios_id`, `serial`, `model`, `manufacturers_id`, `patrimonio`,
+                 `states_id`, `groups_id`, `users_id`, `locations_id`,
+                 `tecnico_alterou_id`, `data_movimentacao`, `entities_id`)
+             VALUES (
+                 "  . intval($this->fields['id'])                              . ",
+                 '" . $DB->escape($this->fields['serial']        ?? '') . "',
+                 '" . $DB->escape($this->fields['model']         ?? '') . "',
+                 "  . intval($this->fields['manufacturers_id']   ?? 0)         . ",
+                 '" . $DB->escape($this->fields['otherserial']   ?? '') . "',
+                 "  . intval($this->fields['states_id']          ?? 0)         . ",
+                 "  . intval($this->fields['groups_id']          ?? 0)         . ",
+                 "  . intval($this->fields['users_id']           ?? 0)         . ",
+                 "  . intval($this->fields['locations_id']       ?? 0)         . ",
+                 "  . Session::getLoginUserID()                                . ",
+                 NOW(),
+                 "  . intval($this->fields['entities_id']        ?? 0)         . "
+             )"
+        );
+    }
+
+    function showForm($ID, $options = []) {
+        $this->initForm($ID, $options);
+        $this->showFormHeader($options);
+
+        // --- Row 1: Número de Série + Status ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</td>";
+        echo "<td>" . Html::input('serial', ['value' => $this->fields['serial'] ?? '']) . "</td>";
+        echo "<td>" . __('Status', 'radios') . "</td>";
+        echo "<td>";
+        State::dropdown(['value' => $this->fields['states_id'] ?? 0, 'name' => 'states_id']);
+        echo "</td>";
+        echo "</tr>";
+
+        // --- Row 2: Fabricante + Localização ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td><span class='required'>*</span>&nbsp;" . __('Fabricante', 'radios') . "</td>";
+        echo "<td>";
+        Manufacturer::dropdown(['value' => $this->fields['manufacturers_id'] ?? 0, 'name' => 'manufacturers_id']);
+        echo "</td>";
+        echo "<td>" . __('Localização', 'radios') . "</td>";
+        echo "<td>";
+        Location::dropdown(['value' => $this->fields['locations_id'] ?? 0, 'name' => 'locations_id']);
+        echo "</td>";
+        echo "</tr>";
+
+        // --- Row 3: Modelo + Grupo ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>" . __('Modelo', 'radios') . "</td>";
+        echo "<td>" . Html::input('model', ['value' => $this->fields['model'] ?? '']) . "</td>";
+        echo "<td>" . __('Grupo', 'radios') . "</td>";
+        echo "<td>";
+        Group::dropdown([
+            'value'  => $this->fields['groups_id'] ?? 0,
+            'name'   => 'groups_id',
+            'entity' => $this->fields['entities_id'] ?? 0,
+        ]);
+        echo "</td>";
+        echo "</tr>";
+
+        // --- Row 4: Patrimônio + Usuário ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>" . __('Patrimônio', 'radios') . "</td>";
+        echo "<td>" . Html::input('otherserial', ['value' => $this->fields['otherserial'] ?? '']) . "</td>";
+        echo "<td>" . __('Usuário', 'radios') . "</td>";
+        echo "<td>";
+        User::dropdown([
+            'value'  => $this->fields['users_id'] ?? 0,
+            'name'   => 'users_id',
+            'right'  => 'all',
+            'entity' => $this->fields['entities_id'] ?? 0,
+        ]);
+        echo "</td>";
+        echo "</tr>";
+
+        // --- Row 5: Chave da Nota Fiscal ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>" . __('Chave da Nota Fiscal', 'radios') . "</td>";
+        echo "<td colspan='3'>";
+        echo Html::input('chave_nf', ['value' => $this->fields['chave_nf'] ?? '', 'maxlength' => 44, 'size' => 50]);
+        echo "</td>";
+        echo "</tr>";
+
+        // --- Row 6: Comentários ---
+        echo "<tr class='tab_bg_1'>";
+        echo "<td class='top'>" . __('Comentários', 'radios') . "</td>";
+        echo "<td colspan='3'>";
+        echo Html::textarea(['name' => 'comment', 'value' => $this->fields['comment'] ?? '', 'rows' => 5, 'display' => false]);
+        echo "</td>";
+        echo "</tr>";
+
+        $this->showFormButtons($options);
+        return true;
     }
 
     function rawSearchOptions() {
