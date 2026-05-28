@@ -76,6 +76,78 @@ class PluginRadiosRadio extends CommonDBTM {
         return $input;
     }
 
+    static function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
+        if ($item instanceof PluginRadiosRadio && $item->getID() > 0) {
+            $count = countElementsInTable('glpi_radios_historico', ['radios_id' => $item->getID()]);
+            return self::createTabEntry(__('Histórico', 'radios'), $count);
+        }
+        return '';
+    }
+
+    static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
+        if ($item instanceof PluginRadiosRadio) {
+            $item->showHistoricoTab();
+        }
+        return true;
+    }
+
+    function showHistoricoTab() {
+        global $DB;
+        $radio_id = intval($this->fields['id']);
+
+        $result = $DB->query(
+            "SELECT h.*,
+                    CONCAT(IFNULL(u.firstname,''), ' ', IFNULL(u.realname,'')) AS usuario_nome,
+                    CONCAT(IFNULL(t.firstname,''), ' ', IFNULL(t.realname,'')) AS tecnico_nome,
+                    s.name  AS state_name,
+                    g.completename AS group_name,
+                    l.name  AS location_name
+             FROM glpi_radios_historico h
+             LEFT JOIN glpi_users u ON h.users_id = u.id
+             LEFT JOIN glpi_users t ON h.tecnico_alterou_id = t.id
+             LEFT JOIN glpi_states s ON h.states_id = s.id
+             LEFT JOIN glpi_groups g ON h.groups_id = g.id
+             LEFT JOIN glpi_locations l ON h.locations_id = l.id
+             WHERE h.radios_id = $radio_id
+             ORDER BY h.data_movimentacao DESC
+             LIMIT 100"
+        );
+
+        echo "<div class='spaced'>";
+        echo "<table class='tab_cadre_fixe'>";
+        echo "<tr class='tab_bg_2'>";
+        echo "<th>" . __('Data', 'radios')       . "</th>";
+        echo "<th>" . __('Técnico', 'radios')     . "</th>";
+        echo "<th>" . __('Status', 'radios')      . "</th>";
+        echo "<th>" . __('Grupo', 'radios')       . "</th>";
+        echo "<th>" . __('Usuário', 'radios')     . "</th>";
+        echo "<th>" . __('Localização', 'radios') . "</th>";
+        echo "</tr>";
+
+        if ($result && $DB->numrows($result) > 0) {
+            $i = 0;
+            while ($row = $DB->fetchAssoc($result)) {
+                $class = ($i % 2 === 0) ? 'tab_bg_1' : 'tab_bg_3';
+                echo "<tr class='$class'>";
+                echo "<td>" . Html::convDateTime($row['data_movimentacao']) . "</td>";
+                echo "<td>" . Html::entities_deep(trim($row['tecnico_nome'])) . "</td>";
+                echo "<td>" . Html::entities_deep($row['state_name']  ?? '-') . "</td>";
+                echo "<td>" . Html::entities_deep($row['group_name']  ?? '-') . "</td>";
+                echo "<td>" . Html::entities_deep(trim($row['usuario_nome'])) . "</td>";
+                echo "<td>" . Html::entities_deep($row['location_name'] ?? '-') . "</td>";
+                echo "</tr>";
+                $i++;
+            }
+        } else {
+            echo "<tr class='tab_bg_1'><td colspan='6' class='center'>";
+            echo __('Nenhum histórico encontrado.', 'radios');
+            echo "</td></tr>";
+        }
+
+        echo "</table>";
+        echo "</div>";
+    }
+
     function post_addItem() {
         $this->insertHistoricoEntry();
     }

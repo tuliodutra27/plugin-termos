@@ -9,7 +9,7 @@ if (!Session::getLoginUserID()) {
 
 Session::checkRight("config", READ);
 
-Html::header(PluginRadiosRadio::getTypeName(2), $_SERVER['PHP_SELF'], 'plugins', 'radios');
+Html::header(PluginRadiosRadio::getTypeName(2), $_SERVER['PHP_SELF'], 'assets', 'PluginRadiosRadio');
 
 Search::show('PluginRadiosRadio');
 
