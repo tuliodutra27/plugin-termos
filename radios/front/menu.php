@@ -1,5 +1,4 @@
-<?php
-// plugins/radios/front/menu.php
+﻿<?php
 
 include ('../../../inc/includes.php');
 
@@ -362,7 +361,7 @@ try {
     // Buscar grupos da entidade atual ou entidade raiz (0)
     $entity_condition = [
         'OR' => [
-            'entities_id' => intval($_SESSION['glpiactive_entity']),
+            'entities_id' => $_SESSION['glpiactive_entity'],
             'entities_id' => 0,
             'is_recursive' => 1
         ]

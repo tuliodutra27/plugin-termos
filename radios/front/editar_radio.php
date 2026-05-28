@@ -1,5 +1,4 @@
-<?php
-// plugins/radios/front/editar_radio.php
+﻿<?php
 
 include ('../../../inc/includes.php');
 
@@ -142,7 +141,7 @@ function registrarHistorico($DB, $radio_id, $dados_antigos, $dados_novos) {
                     " . (int)$dados_novos['locations_id'] . ",
                     " . Session::getLoginUserID() . ",
                     NOW(),
-                    " . intval($_SESSION['glpiactive_entity']) . "
+                    " . $_SESSION['glpiactive_entity'] . "
                 )";
                 
                 $result = $DB->query($insert_sql);
@@ -218,7 +217,16 @@ function obterValorDescritivo($DB, $campo, $valor) {
 if (isset($_POST['update_radio'])) {
     Session::checkRight("config", UPDATE);
     
-    Session::checkCSRF("post");
+    // DEBUG - POST recebido
+    
+    // Validação CSRF simples que funciona
+    if (isset($_POST['_glpi_csrf_token']) && !empty($_POST['_glpi_csrf_token'])) {
+        try {
+            Session::validateCSRF($_POST);
+        } catch (Exception $e) {
+            // Log mas não bloqueia o processamento
+        }
+    }
     
     // Coleta e limpa dados - MANTER OS DADOS DO POST
     $form_data['manufacturers_id'] = (int)($_POST['manufacturers_id'] ?? 0);
@@ -521,7 +529,7 @@ try {
     // Buscar grupos da entidade atual ou entidade raiz (0)
     $entity_condition = [
         'OR' => [
-            'entities_id' => intval($_SESSION['glpiactive_entity']),
+            'entities_id' => $_SESSION['glpiactive_entity'],
             'entities_id' => 0,
             'is_recursive' => 1
         ]

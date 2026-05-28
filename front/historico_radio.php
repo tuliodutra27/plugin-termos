@@ -1,5 +1,4 @@
-<?php
-// plugins/termos/front/historico_radio.php
+﻿<?php
 
 include ('../../../inc/includes.php');
 
@@ -269,19 +268,19 @@ echo "<div style='display: flex; flex-wrap: wrap; gap: 15px; align-items: end;'>
 // Serial
 echo "<div>";
 echo "<label for='serial' style='display: block; margin-bottom: 5px;'>Serial:</label>";
-echo "<input type='text' name='serial' id='serial' value='" . htmlspecialchars($filtro_serial) . "' style='width: 150px;'>";
+echo "<input type='text' name='serial' id='serial' value='$filtro_serial' style='width: 150px;'>";
 echo "</div>";
 
 // Data Início
 echo "<div>";
 echo "<label for='data_inicio' style='display: block; margin-bottom: 5px;'>Data Início:</label>";
-echo "<input type='date' name='data_inicio' id='data_inicio' value='" . htmlspecialchars($filtro_data_inicio) . "' style='width: 150px;'>";
+echo "<input type='date' name='data_inicio' id='data_inicio' value='$filtro_data_inicio' style='width: 150px;'>";
 echo "</div>";
 
 // Data Fim
 echo "<div>";
 echo "<label for='data_fim' style='display: block; margin-bottom: 5px;'>Data Fim:</label>";
-echo "<input type='date' name='data_fim' id='data_fim' value='" . htmlspecialchars($filtro_data_fim) . "' style='width: 150px;'>";
+echo "<input type='date' name='data_fim' id='data_fim' value='$filtro_data_fim' style='width: 150px;'>";
 echo "</div>";
 
 // Ordenação

@@ -1,5 +1,4 @@
-<?php
-// plugins/radios/front/novo_radio.php
+﻿<?php
 
 include ('../../../inc/includes.php');
 
@@ -36,7 +35,7 @@ if (isset($_POST['add_radio'])) {
     $users_id = (int)($_POST['users_id'] ?? 0);
     $locations_id = (int)($_POST['locations_id'] ?? 0);
     $groups_id = (int)($_POST['groups_id'] ?? 0);
-    $entities_id = intval($_SESSION['glpiactive_entity']);
+    $entities_id = $_SESSION['glpiactive_entity'];
     
     // ID do técnico que está fazendo o cadastro
     $tecnico_alterou_id = Session::getLoginUserID();
@@ -176,10 +175,9 @@ try {
 } catch (Exception $e) {
     $manufacturers_options[0] = 'Erro ao carregar fabricantes';
 }
-Dropdown::showFromArray('manufacturers_id', $manufacturers_options, [
+echo Html::select('manufacturers_id', $manufacturers_options, [
     'value' => 0,
-    'used' => [],
-    'display_emptychoice' => false
+    'required' => true
 ]);
 echo "</td>";
 echo "</tr>";
@@ -254,7 +252,7 @@ try {
 } catch (Exception $e) {
     $states_options[0] = 'Erro ao carregar status';
 }
-Dropdown::showFromArray('states_id', $states_options, ['value' => 0, 'used' => [], 'display_emptychoice' => false]);
+echo Html::select('states_id', $states_options, ['value' => 0]);
 echo "</td>";
 echo "</tr>";
 
@@ -275,7 +273,7 @@ try {
 } catch (Exception $e) {
     $locations_options[0] = 'Erro ao carregar localizações';
 }
-Dropdown::showFromArray('locations_id', $locations_options, ['value' => 0, 'used' => [], 'display_emptychoice' => false]);
+echo Html::select('locations_id', $locations_options, ['value' => 0]);
 echo "</td>";
 echo "</tr>";
 
@@ -288,7 +286,7 @@ try {
     // Buscar grupos da entidade atual ou entidade raiz (0)
     $entity_condition = [
         'OR' => [
-            'entities_id' => intval($_SESSION['glpiactive_entity']),
+            'entities_id' => $_SESSION['glpiactive_entity'],
             'entities_id' => 0,
             'is_recursive' => 1
         ]
@@ -309,7 +307,7 @@ try {
 } catch (Exception $e) {
     $groups_options[0] = 'Erro ao carregar grupos';
 }
-Dropdown::showFromArray('groups_id', $groups_options, ['value' => 0, 'used' => [], 'display_emptychoice' => false]);
+echo Html::select('groups_id', $groups_options, ['value' => 0]);
 echo "</td>";
 echo "</tr>";
 
@@ -332,7 +330,7 @@ try {
 } catch (Exception $e) {
     $users_options[0] = 'Erro ao carregar usuários';
 }
-Dropdown::showFromArray('users_id', $users_options, ['value' => 0, 'used' => [], 'display_emptychoice' => false]);
+echo Html::select('users_id', $users_options, ['value' => 0]);
 echo "</td>";
 echo "</tr>";
 
