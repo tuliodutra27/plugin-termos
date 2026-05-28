@@ -76,7 +76,7 @@ class PluginRadiosRadio extends CommonDBTM {
         return $input;
     }
 
-    static function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
+    function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
         if ($item instanceof PluginRadiosRadio && $item->getID() > 0) {
             $count = countElementsInTable('glpi_radios_historico', ['radios_id' => $item->getID()]);
             return self::createTabEntry(__('Histórico', 'radios'), $count);
@@ -84,7 +84,7 @@ class PluginRadiosRadio extends CommonDBTM {
         return '';
     }
 
-    static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
+    function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
         if ($item instanceof PluginRadiosRadio) {
             $item->showHistoricoTab();
         }
