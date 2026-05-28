@@ -28,6 +28,10 @@ class PluginRadiosRadio extends CommonDBTM {
         return 'glpi_radios';
     }
 
+    static function getNameField() {
+        return 'serial';
+    }
+
     static function getMenuContent() {
         $menu = [
             'title' => self::getTypeName(2),
