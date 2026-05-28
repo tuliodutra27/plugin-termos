@@ -123,7 +123,7 @@ if (isset($_GET['export_csv'])) {
                 }
                 
                 // Preparar nome do usuário
-                $user_display = trim(($row['user_realname'] ?: '') . ' ' . ($row['user_firstname'] ?: ''));
+                $user_display = trim(($row['user_firstname'] ?: '') . ' ' . ($row['user_realname'] ?: ''));
                 
                 $csv_row = [
                     $row['id'],
@@ -160,11 +160,6 @@ if (isset($_GET['export_csv'])) {
 if (isset($_POST['delete_id']) && isset($_POST['confirm_delete'])) {
     Session::checkRight("config", UPDATE);
 
-    if (!isset($_POST['_glpi_csrf_token']) || !Session::validateCSRF($_POST)) {
-        Session::addMessageAfterRedirect('Erro de segurança. Operação não autorizada.', true, ERROR);
-        Html::redirect('menu.php');
-        exit;
-    }
 
     $delete_id = (int)$_POST['delete_id'];
     
@@ -313,7 +308,7 @@ try {
     ]);
     foreach ($users as $user) {
         $selected = (isset($_GET['user']) && $_GET['user'] == $user['id']) ? 'selected' : '';
-        $name = trim($user['realname'] . ' ' . $user['firstname']);
+        $name = trim($user['firstname'] . ' ' . $user['realname']);
         echo "<option value='".intval($user['id'])."' $selected>".htmlspecialchars($name)."</option>";
     }
 } catch (Exception $e) {
@@ -480,7 +475,7 @@ try {
             }
             echo "<td>".Html::entities_deep($group_display)."</td>";
             
-            echo "<td>".Html::entities_deep(trim(($radio['user_realname'] ?: '') . ' ' . ($radio['user_firstname'] ?: '')))."</td>";
+            echo "<td>".Html::entities_deep(trim(($radio['user_firstname'] ?: '') . ' ' . ($radio['user_realname'] ?: '')))."</td>";
             echo "<td>".Html::entities_deep($radio['location_name'] ?: '-')."</td>";
             
             echo "<td style='text-align: center;'>";

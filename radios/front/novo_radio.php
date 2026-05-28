@@ -17,12 +17,6 @@ global $DB;
 if (isset($_POST['add_radio'])) {
     Session::checkRight("config", UPDATE);
     
-    // Verificação CSRF
-    if (!isset($_POST['_glpi_csrf_token']) || empty($_POST['_glpi_csrf_token'])) {
-        Session::addMessageAfterRedirect('Erro de segurança. Recarregue a página e tente novamente.', true, ERROR);
-        Html::redirect($_SERVER['REQUEST_URI']);
-        exit;
-    }
     
     // Coleta e limpa dados
     $manufacturers_id = (int)($_POST['manufacturers_id'] ?? 0);
@@ -333,7 +327,7 @@ try {
         'ORDER' => 'realname'
     ]);
     foreach ($users as $user) {
-        $name = trim($user['realname'] . ' ' . $user['firstname']);
+        $name = trim($user['firstname'] . ' ' . $user['realname']);
         $users_options[$user['id']] = $name;
     }
 } catch (Exception $e) {

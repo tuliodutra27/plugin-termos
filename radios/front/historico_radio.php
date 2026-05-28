@@ -185,10 +185,10 @@ function exportarDados($DB, $tipo) {
         while ($row = $DB->fetchAssoc($result)) {
             // Formatação dos dados
             $grupo_nome = !empty($row['grupo_nome_completo']) ? $row['grupo_nome_completo'] : ($row['grupo_nome'] ?? '-');
-            $usuario_nome = trim(($row['usuario_nome'] ?? '') . ' ' . ($row['usuario_sobrenome'] ?? ''));
+            $usuario_nome = trim(($row['usuario_sobrenome'] ?? '') . ' ' . ($row['usuario_nome'] ?? ''));
             if (empty($usuario_nome)) $usuario_nome = '-';
             
-            $tecnico_nome = trim(($row['tecnico_nome'] ?? '') . ' ' . ($row['tecnico_sobrenome'] ?? ''));
+            $tecnico_nome = trim(($row['tecnico_sobrenome'] ?? '') . ' ' . ($row['tecnico_nome'] ?? ''));
             if (empty($tecnico_nome)) $tecnico_nome = 'Super Admin';
             
             $data_formatada = '-';

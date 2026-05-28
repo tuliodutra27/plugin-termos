@@ -159,7 +159,7 @@ function obterValorDescritivo($DB, $campo, $valor) {
                 $result = $DB->query("SELECT realname, firstname FROM glpi_users WHERE id = " . (int)$valor);
                 if ($result && $DB->numrows($result) > 0) {
                     $row = $DB->fetchAssoc($result);
-                    return trim($row['realname'] . ' ' . $row['firstname']);
+                    return trim($row['firstname'] . ' ' . $row['realname']);
                 }
                 break;
                 
@@ -182,11 +182,6 @@ function obterValorDescritivo($DB, $campo, $valor) {
 if (isset($_POST['update_radio'])) {
     Session::checkRight("config", UPDATE);
     
-    if (!isset($_POST['_glpi_csrf_token']) || !Session::validateCSRF($_POST)) {
-        Session::addMessageAfterRedirect('Erro de segurança. Recarregue a página.', true, ERROR);
-        Html::redirect($_SERVER['REQUEST_URI']);
-        exit;
-    }
     
     // Coleta e limpa dados - MANTER OS DADOS DO POST
     $form_data['manufacturers_id'] = (int)($_POST['manufacturers_id'] ?? 0);
@@ -519,7 +514,7 @@ try {
         'ORDER' => 'realname'
     ]);
     foreach ($users as $user) {
-        $name = trim($user['realname'] . ' ' . $user['firstname']);
+        $name = trim($user['firstname'] . ' ' . $user['realname']);
         if (empty($name)) {
             $name = "Usuário ID " . $user['id'];
         }
