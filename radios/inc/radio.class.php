@@ -84,7 +84,7 @@ class PluginRadiosRadio extends CommonDBTM {
         return '';
     }
 
-    function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
+    static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
         if ($item instanceof PluginRadiosRadio) {
             $item->showHistoricoTab();
         }
