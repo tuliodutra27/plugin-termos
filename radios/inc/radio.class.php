@@ -195,72 +195,74 @@ class PluginRadiosRadio extends CommonDBTM {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
 
-        // --- Row 1: Número de Série + Status ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</td>";
-        echo "<td>" . Html::input('serial', ['value' => $this->fields['serial'] ?? '']) . "</td>";
-        echo "<td>" . __('Status', 'radios') . "</td>";
-        echo "<td>";
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
+        echo Html::input('serial', ['value' => $this->fields['serial'] ?? '']);
+        echo "</div></div>";
+
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Status', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
         State::dropdown(['value' => $this->fields['states_id'] ?? 0, 'name' => 'states_id']);
-        echo "</td>";
-        echo "</tr>";
+        echo "</div></div>";
 
-        // --- Row 2: Fabricante + Localização ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td><span class='required'>*</span>&nbsp;" . __('Fabricante', 'radios') . "</td>";
-        echo "<td>";
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'><span class='required'>*</span>&nbsp;" . __('Fabricante', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
         Manufacturer::dropdown(['value' => $this->fields['manufacturers_id'] ?? 0, 'name' => 'manufacturers_id']);
-        echo "</td>";
-        echo "<td>" . __('Localização', 'radios') . "</td>";
-        echo "<td>";
-        Location::dropdown(['value' => $this->fields['locations_id'] ?? 0, 'name' => 'locations_id']);
-        echo "</td>";
-        echo "</tr>";
+        echo "</div></div>";
 
-        // --- Row 3: Modelo + Grupo ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Modelo', 'radios') . "</td>";
-        echo "<td>" . Html::input('model', ['value' => $this->fields['model'] ?? '']) . "</td>";
-        echo "<td>" . __('Grupo', 'radios') . "</td>";
-        echo "<td>";
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Localização', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
+        Location::dropdown(['value' => $this->fields['locations_id'] ?? 0, 'name' => 'locations_id']);
+        echo "</div></div>";
+
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Modelo', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
+        echo Html::input('model', ['value' => $this->fields['model'] ?? '']);
+        echo "</div></div>";
+
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Grupo', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
         Group::dropdown([
             'value'  => $this->fields['groups_id'] ?? 0,
             'name'   => 'groups_id',
             'entity' => $this->fields['entities_id'] ?? 0,
         ]);
-        echo "</td>";
-        echo "</tr>";
+        echo "</div></div>";
 
-        // --- Row 4: Patrimônio + Usuário ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Patrimônio', 'radios') . "</td>";
-        echo "<td>" . Html::input('otherserial', ['value' => $this->fields['otherserial'] ?? '']) . "</td>";
-        echo "<td>" . __('Usuário', 'radios') . "</td>";
-        echo "<td>";
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Patrimônio', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
+        echo Html::input('otherserial', ['value' => $this->fields['otherserial'] ?? '']);
+        echo "</div></div>";
+
+        echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Usuário', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 field-container'>";
         User::dropdown([
             'value'  => $this->fields['users_id'] ?? 0,
             'name'   => 'users_id',
             'right'  => 'all',
             'entity' => $this->fields['entities_id'] ?? 0,
         ]);
-        echo "</td>";
-        echo "</tr>";
+        echo "</div></div>";
 
-        // --- Row 5: Chave da Nota Fiscal ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Chave da Nota Fiscal', 'radios') . "</td>";
-        echo "<td colspan='3'>";
-        echo Html::input('chave_nf', ['value' => $this->fields['chave_nf'] ?? '', 'maxlength' => 44, 'size' => 50]);
-        echo "</td>";
-        echo "</tr>";
+        echo "<div class='form-field row col-12 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end'>" . __('Chave da Nota Fiscal', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 col-sm-9 field-container'>";
+        echo Html::input('chave_nf', ['value' => $this->fields['chave_nf'] ?? '', 'maxlength' => 44]);
+        echo "</div></div>";
 
-        // --- Row 6: Comentários ---
-        echo "<tr class='tab_bg_1'>";
-        echo "<td class='top'>" . __('Comentários', 'radios') . "</td>";
-        echo "<td colspan='3'>";
+        echo "<div class='form-field row col-12 mb-2'>";
+        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end'>" . __('Comentários', 'radios') . "</label>";
+        echo "<div class='col-xxl-7 col-sm-9 field-container'>";
         echo Html::textarea(['name' => 'comment', 'value' => $this->fields['comment'] ?? '', 'rows' => 5, 'display' => false]);
-        echo "</td>";
-        echo "</tr>";
+        echo "</div></div>";
 
         $this->showFormButtons($options);
         return true;
