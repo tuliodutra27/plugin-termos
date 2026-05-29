@@ -195,42 +195,43 @@ class PluginRadiosRadio extends CommonDBTM {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
 
-        // Wrapper row explicitly creates Bootstrap two-column context
+        // col-4/col-8 in each col-sm-6 = 16.7% label / 33.3% input per column
+        // col-2/col-10 in col-12 = same 16.7% label position across full width
         echo "<div class='row'>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         echo Html::input('serial', ['value' => $this->fields['serial'] ?? '']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Status', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Status', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         State::dropdown(['value' => $this->fields['states_id'] ?? 0, 'name' => 'states_id']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'><span class='required'>*</span>&nbsp;" . __('Fabricante', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'><span class='required'>*</span>&nbsp;" . __('Fabricante', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         Manufacturer::dropdown(['value' => $this->fields['manufacturers_id'] ?? 0, 'name' => 'manufacturers_id']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Localização', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Localização', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         Location::dropdown(['value' => $this->fields['locations_id'] ?? 0, 'name' => 'locations_id']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Modelo', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Modelo', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         echo Html::input('model', ['value' => $this->fields['model'] ?? '']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Grupo', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Grupo', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         Group::dropdown([
             'value'  => $this->fields['groups_id'] ?? 0,
             'name'   => 'groups_id',
@@ -239,14 +240,14 @@ class PluginRadiosRadio extends CommonDBTM {
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Patrimônio', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Patrimônio', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         echo Html::input('otherserial', ['value' => $this->fields['otherserial'] ?? '']);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 text-xxl-end'>" . __('Usuário', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 field-container'>";
+        echo "<label class='col-form-label col-4 text-end'>" . __('Usuário', 'radios') . "</label>";
+        echo "<div class='col-8 field-container'>";
         User::dropdown([
             'value'  => $this->fields['users_id'] ?? 0,
             'name'   => 'users_id',
@@ -256,14 +257,14 @@ class PluginRadiosRadio extends CommonDBTM {
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end text-sm-end'>" . __('Chave da Nota Fiscal', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 col-sm-9 field-container'>";
+        echo "<label class='col-form-label col-2 text-end'>" . __('Chave da Nota Fiscal', 'radios') . "</label>";
+        echo "<div class='col-10 field-container'>";
         echo Html::input('chave_nf', ['value' => $this->fields['chave_nf'] ?? '', 'maxlength' => 44]);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end text-sm-end'>" . __('Comentários', 'radios') . "</label>";
-        echo "<div class='col-xxl-7 col-sm-9 field-container'>";
+        echo "<label class='col-form-label col-2 text-end'>" . __('Comentários', 'radios') . "</label>";
+        echo "<div class='col-10 field-container'>";
         echo Html::textarea(['name' => 'comment', 'value' => $this->fields['comment'] ?? '', 'rows' => 5, 'display' => false]);
         echo "</div></div>";
 
