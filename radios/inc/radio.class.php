@@ -195,6 +195,9 @@ class PluginRadiosRadio extends CommonDBTM {
         $this->initForm($ID, $options);
         $this->showFormHeader($options);
 
+        // Wrapper row explicitly creates Bootstrap two-column context
+        echo "<div class='row'>";
+
         echo "<div class='form-field row col-12 col-sm-6 mb-2'>";
         echo "<label class='col-form-label col-xxl-5 text-xxl-end'><span class='required'>*</span>&nbsp;" . __('Número de Série', 'radios') . "</label>";
         echo "<div class='col-xxl-7 field-container'>";
@@ -253,16 +256,18 @@ class PluginRadiosRadio extends CommonDBTM {
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end'>" . __('Chave da Nota Fiscal', 'radios') . "</label>";
+        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end text-sm-end'>" . __('Chave da Nota Fiscal', 'radios') . "</label>";
         echo "<div class='col-xxl-7 col-sm-9 field-container'>";
         echo Html::input('chave_nf', ['value' => $this->fields['chave_nf'] ?? '', 'maxlength' => 44]);
         echo "</div></div>";
 
         echo "<div class='form-field row col-12 mb-2'>";
-        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end'>" . __('Comentários', 'radios') . "</label>";
+        echo "<label class='col-form-label col-xxl-5 col-sm-3 text-xxl-end text-sm-end'>" . __('Comentários', 'radios') . "</label>";
         echo "<div class='col-xxl-7 col-sm-9 field-container'>";
         echo Html::textarea(['name' => 'comment', 'value' => $this->fields['comment'] ?? '', 'rows' => 5, 'display' => false]);
         echo "</div></div>";
+
+        echo "</div>"; // close wrapper row
 
         $this->showFormButtons($options);
         return true;
