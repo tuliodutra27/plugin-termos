@@ -86,34 +86,50 @@ class PluginRadiosRadio extends CommonDBTM {
     function showHistoricoTab() {
         global $DB;
         $radio_id = intval($this->fields['id']);
+        $start    = intval($_REQUEST['start'] ?? 0);
+        $limit    = intval($_SESSION['glpilist_limit'] ?? 20);
+
+        $total = countElementsInTable('glpi_radios_historico', ['radios_id' => $radio_id]);
+
+        echo "<div class='spaced'>";
+
+        // Export button
+        $serial = $DB->escape($this->fields['serial'] ?? '');
+        echo "<div class='d-flex justify-content-end mb-2'>";
+        echo "<a class='btn btn-outline-secondary btn-sm' href='/plugins/radios/front/historico_radio.php?export=csv&serial=" . htmlspecialchars($serial) . "'>";
+        echo "<i class='ti ti-download'></i>&nbsp;" . __('Exportar', 'radios') . "</a>";
+        echo "</div>";
+
+        Html::printAjaxPager(__('Histórico', 'radios'), $start, $total);
 
         $result = $DB->query(
-            "SELECT h.*,
-                    CONCAT(IFNULL(u.firstname,''), ' ', IFNULL(u.realname,'')) AS usuario_nome,
+            "SELECT h.id,
+                    h.data_movimentacao,
                     CONCAT(IFNULL(t.firstname,''), ' ', IFNULL(t.realname,'')) AS tecnico_nome,
                     s.name  AS state_name,
                     g.completename AS group_name,
+                    CONCAT(IFNULL(u.firstname,''), ' ', IFNULL(u.realname,'')) AS usuario_nome,
                     l.name  AS location_name
              FROM glpi_radios_historico h
-             LEFT JOIN glpi_users u ON h.users_id = u.id
              LEFT JOIN glpi_users t ON h.tecnico_alterou_id = t.id
              LEFT JOIN glpi_states s ON h.states_id = s.id
              LEFT JOIN glpi_groups g ON h.groups_id = g.id
+             LEFT JOIN glpi_users u ON h.users_id = u.id
              LEFT JOIN glpi_locations l ON h.locations_id = l.id
              WHERE h.radios_id = $radio_id
              ORDER BY h.data_movimentacao DESC
-             LIMIT 100"
+             LIMIT " . intval($start) . ", " . intval($limit)
         );
 
-        echo "<div class='spaced'>";
         echo "<table class='tab_cadre_fixe'>";
         echo "<tr class='tab_bg_2'>";
-        echo "<th>" . __('Data', 'radios')       . "</th>";
-        echo "<th>" . __('Técnico', 'radios')     . "</th>";
-        echo "<th>" . __('Status', 'radios')      . "</th>";
-        echo "<th>" . __('Grupo', 'radios')       . "</th>";
-        echo "<th>" . __('Usuário', 'radios')     . "</th>";
-        echo "<th>" . __('Localização', 'radios') . "</th>";
+        echo "<th>" . __('ID')                    . "</th>";
+        echo "<th>" . __('Data', 'radios')         . "</th>";
+        echo "<th>" . __('Técnico', 'radios')      . "</th>";
+        echo "<th>" . __('Status', 'radios')       . "</th>";
+        echo "<th>" . __('Grupo', 'radios')        . "</th>";
+        echo "<th>" . __('Usuário', 'radios')      . "</th>";
+        echo "<th>" . __('Localização', 'radios')  . "</th>";
         echo "</tr>";
 
         if ($result && $DB->numrows($result) > 0) {
@@ -121,6 +137,7 @@ class PluginRadiosRadio extends CommonDBTM {
             while ($row = $DB->fetchAssoc($result)) {
                 $class = ($i % 2 === 0) ? 'tab_bg_1' : 'tab_bg_3';
                 echo "<tr class='$class'>";
+                echo "<td>" . intval($row['id']) . "</td>";
                 echo "<td>" . Html::convDateTime($row['data_movimentacao']) . "</td>";
                 echo "<td>" . Html::entities_deep(trim($row['tecnico_nome'])) . "</td>";
                 echo "<td>" . Html::entities_deep($row['state_name']  ?? '-') . "</td>";
@@ -131,12 +148,14 @@ class PluginRadiosRadio extends CommonDBTM {
                 $i++;
             }
         } else {
-            echo "<tr class='tab_bg_1'><td colspan='6' class='center'>";
+            echo "<tr class='tab_bg_1'><td colspan='7' class='center'>";
             echo __('Nenhum histórico encontrado.', 'radios');
             echo "</td></tr>";
         }
 
         echo "</table>";
+
+        Html::printAjaxPager(__('Histórico', 'radios'), $start, $total);
         echo "</div>";
     }
 
