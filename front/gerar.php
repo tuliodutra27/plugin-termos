@@ -339,21 +339,20 @@ try {
             
             // BUSCAR RÁDIOS
             
-            $sql_radios = "SELECT 
+            $sql_radios = "SELECT
                 r.id,
-                r.name,
                 r.serial,
                 r.otherserial,
                 r.comment,
                 r.chave_nf,
                 m.name as fabricante,
                 r.model
-            FROM glpi_radios r
+            FROM glpi_plugin_radios_radios r
             LEFT JOIN glpi_manufacturers m ON r.manufacturers_id = m.id
-            WHERE r.users_id = " . intval($user_id) . " 
-            AND r.is_deleted = 0 
+            WHERE r.users_id = " . intval($user_id) . "
+            AND r.is_deleted = 0
             AND r.entities_id = " . intval($_SESSION['glpiactive_entity']) . "
-            ORDER BY r.name";
+            ORDER BY r.serial";
             
             
             $result_radios = $DB->query($sql_radios);
@@ -1311,9 +1310,9 @@ try {
                         }
                         
                         // NOVO: Buscar quantos rádios o usuário tem
-                        $sql_count_radios = "SELECT COUNT(*) as total FROM glpi_radios 
-                                            WHERE users_id = " . intval($user['id']) . " 
-                                            AND is_deleted = 0 
+                        $sql_count_radios = "SELECT COUNT(*) as total FROM glpi_plugin_radios_radios
+                                            WHERE users_id = " . intval($user['id']) . "
+                                            AND is_deleted = 0
                                             AND entities_id = " . intval($_SESSION['glpiactive_entity']);
                         
                         $result_count_radios = $DB->query($sql_count_radios);
